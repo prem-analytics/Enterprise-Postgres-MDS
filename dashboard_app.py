@@ -16,13 +16,14 @@ st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Postgre
 
 def fetch_analytics_data():
     try:
-        # 🌟 ENTERPRISE FIX: Use os.getenv to pull credentials securely out of cleartext source code
+        # 🌟 ENTERPRISE FIX: Enforced standard 'database' param and strict 'sslmode="require"' for Neon Cloud routing
         conn = psycopg2.connect(
-            dbname=os.getenv("DB_NAME"),
+            database=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT")
+            port=os.getenv("DB_PORT"),
+            sslmode="require" # 🌟 CRITICAL CLOUD SECURE CONNECTION FIX
         )
         query = "SELECT * FROM analytics.fct_user_post_metrics ORDER BY user_id;"
         df = pd.read_sql_query(query, conn)
