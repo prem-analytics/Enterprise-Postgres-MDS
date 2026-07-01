@@ -1,0 +1,27 @@
+# 🌟 CRITICAL SECURITY: Never leak credentials or environment files
+.env
+*.env
+
+# Python Virtual Environment dependencies
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Dagster local runtime states and history caches
+.tmp_dagster_home_3x/
+logs/
+*.db
+*.sqlite
+
+# dbt Core build artifacts and downloaded package files
+postgres_pipeline/target/
+postgres_pipeline/dbt_packages/
+postgres_pipeline/logs/
+
+# Operating system system files
+.DS_Store
+Thumbs.db
+
+# Catch all randomized temporary Dagster home directories
+.tmp_dagster_home_*/

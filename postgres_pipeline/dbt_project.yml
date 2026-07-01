@@ -1,0 +1,5 @@
+name: 'postgres_pipeline'
+version: '1.0.0'
+
+# Add this line right here:
+profile: 'postgres_pipeline'
