@@ -16,11 +16,23 @@ st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Postgre
 
 def fetch_analytics_data():
     try:
-        # Check if running on Streamlit Cloud using the unified connection string
+        # 1. First choice: Check for the unified single connection string
         if "CONNECTION_STRING" in st.secrets:
             conn = psycopg2.connect(st.secrets["CONNECTION_STRING"])
+        
+        # 2. Second choice: Fallback to individual Streamlit secret keys
+        elif "DB_HOST" in st.secrets:
+            conn = psycopg2.connect(
+                database=st.secrets.get("DB_NAME", "neondb"),
+                user=st.secrets.get("DB_USER"),
+                password=st.secrets.get("DB_PASSWORD"),
+                host=st.secrets.get("DB_HOST"),
+                port=st.secrets.get("DB_PORT", 5432),
+                sslmode="require"
+            )
+            
+        # 3. Third choice: Fallback to local machine terminal .env file keys
         else:
-            # Fallback to local .env processing keys for your local VS Code terminal
             conn = psycopg2.connect(
                 database=os.getenv("DB_NAME"),
                 user=os.getenv("DB_USER"),
