@@ -16,15 +16,20 @@ st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Postgre
 
 def fetch_analytics_data():
     try:
-        # 🌟 ENTERPRISE FIX: Enforced standard 'database' param and strict 'sslmode="require"' for Neon Cloud routing
-        conn = psycopg2.connect(
-            database=os.getenv("DB_NAME"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
-            sslmode="require" # 🌟 CRITICAL CLOUD SECURE CONNECTION FIX
-        )
+        # Check if running on Streamlit Cloud using the unified connection string
+        if "CONNECTION_STRING" in st.secrets:
+            conn = psycopg2.connect(st.secrets["CONNECTION_STRING"])
+        else:
+            # Fallback to local .env processing keys for your local VS Code terminal
+            conn = psycopg2.connect(
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                host=os.getenv("DB_HOST"),
+                port=os.getenv("DB_PORT"),
+                sslmode="require"
+            )
+        
         query = "SELECT * FROM analytics.fct_user_post_metrics ORDER BY user_id;"
         df = pd.read_sql_query(query, conn)
         conn.close()
