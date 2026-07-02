@@ -1,5 +1,7 @@
 # 📊 Enterprise Modern Data Stack (MDS) Pipeline
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://enterprise-app-mds-aclgz2gmz7bfiyvsygnmre.streamlit.app)
+
 An end-to-end analytics engineering platform orchestrating data ingestion, warehouse transformation, automated data quality testing, and interactive reporting using a secure, credential-decoupled architecture.
 
 ## 🏗️ Architecture Overview
