@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: bq_staging
+    database: analytics-engineering-learning
+    schema: staging
+    tables:
+      - name: raw_customers
+      - name: raw_orders

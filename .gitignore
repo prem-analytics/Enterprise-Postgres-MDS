@@ -1,6 +1,7 @@
 # 🌟 CRITICAL SECURITY: Never leak credentials or environment files
 .env
 *.env
+gcp_creds.json
 
 # Python Virtual Environment dependencies
 venv/
@@ -15,6 +16,10 @@ logs/
 *.sqlite
 
 # dbt Core build artifacts and downloaded package files
+target/
+dbt_packages/
+dbt_modules/
+logs/
 postgres_pipeline/target/
 postgres_pipeline/dbt_packages/
 postgres_pipeline/logs/

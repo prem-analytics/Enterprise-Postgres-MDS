@@ -31,13 +31,14 @@ def ingest_api_to_postgres():
 
     print("[INFO] Establishing secure connection pool to PostgreSQL Warehouse...")
     try:
-        # Secure credential extraction using environment variables
+        # Secure credential extraction using environment variables with enforced TLS/SSL
         conn = psycopg2.connect(
-            dbname=os.getenv("DB_NAME"),
+            database=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT")
+            port=os.getenv("DB_PORT"),
+            sslmode="require" # 🌟 ENFORCES CLOUD SECURITY SECURELY
         )
         cursor = conn.cursor()
     except Exception as e:
