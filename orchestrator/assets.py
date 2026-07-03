@@ -1,31 +1,15 @@
-import os
 import uuid
 import random
-import pathlib
 from datetime import datetime, timedelta
 import pandas as pd
 from google.oauth2 import service_account
 from google.cloud import bigquery
-from dagster import multi_asset, AssetOut, Definitions
-from dagster_dbt import DbtProject, dbt_assets, DbtCliResource
+from dagster import multi_asset, AssetOut
 
-# 1. Core Environment Paths & Credentials Configuration
 CREDS_PATH = "D:/Enterprise-Postgres-MDS/gcp_creds.json"
 PROJECT_ID = "analytics-engineering-learning"
 STAGING_DATASET = "staging"
 
-# Identify the paths to our dbt modeling folder and global profiles directory
-DBT_PROJECT_DIR = pathlib.Path(__file__).joinpath("..", "..", "enterprise-bigquery-mds", "bigquery_pipeline").resolve()
-DBT_PROFILES_DIR = pathlib.Path.home().joinpath(".dbt").resolve()
-
-dbt_project = DbtProject(
-    project_dir=os.fspath(DBT_PROJECT_DIR),
-    profiles_dir=os.fspath(DBT_PROFILES_DIR),
-)
-dbt_project.prepare_if_dev()
-
-
-# 2. Python Ingestion Asset Layer
 @multi_asset(
     outs={
         "raw_customers": AssetOut(key_prefix="bq_staging"),
@@ -34,11 +18,11 @@ dbt_project.prepare_if_dev()
     compute_kind="python"
 )
 def bq_raw_data_ingestion():
-    """Generates high-volume enterprise datasets and streams them directly into BigQuery staging tables."""
+    """Generates high-volume enterprise e-commerce datasets and streams them to BigQuery."""
     num_customers = 2500
     num_orders = 25000
     
-    # Generate Customer Records
+    # 1. Generate Customers
     customer_ids = [str(uuid.uuid4())[:8] for _ in range(num_customers)]
     countries = ['US', 'CA', 'GB', 'DE', 'FR', 'JP', 'IN', 'AU']
     
@@ -49,7 +33,7 @@ def bq_raw_data_ingestion():
         'created_at': [datetime.now() - timedelta(days=random.randint(1, 365)) for _ in range(num_customers)]
     })
     
-    # Generate Transaction Order Records
+    # 2. Generate Orders
     order_statuses = ['completed', 'completed', 'completed', 'returned', 'shipped', 'placed']
     payment_methods = ['credit_card', 'paypal', 'apple_pay', 'crypto']
     
@@ -62,7 +46,7 @@ def bq_raw_data_ingestion():
         'payment_method': [random.choice(payment_methods) for _ in range(num_orders)]
     })
     
-    # Stream data straight into Google Cloud Platform
+    # 3. Stream Outbound Loads Directly to Google Cloud
     credentials = service_account.Credentials.from_service_account_file(CREDS_PATH)
     client = bigquery.Client(credentials=credentials, project=credentials.project_id)
     
@@ -73,19 +57,3 @@ def bq_raw_data_ingestion():
         job.result()
         
     return None, None
-
-
-# 3. Downstream dbt Analytics Transformation Layer
-@dbt_assets(manifest=dbt_project.manifest_path)
-def bq_dbt_assets(context, dbt: DbtCliResource):
-    """Transformation Layer: Directs dbt Core to execute modular views and relational fact tables."""
-    yield from dbt.cli(["build"], context=context).stream()
-
-
-# 4. Global Control Plane Definition Entrypoint
-defs = Definitions(
-    assets=[bq_raw_data_ingestion, bq_dbt_assets],
-    resources={
-        "dbt": DbtCliResource(project_dir=dbt_project),
-    },
-)
