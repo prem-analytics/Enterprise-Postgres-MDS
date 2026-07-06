@@ -1,75 +1,38 @@
 import os
-import json
-import pathlib
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from google.oauth2 import service_account
-from google.cloud import bigquery
+import psycopg2
 
 # 1. Page Configuration Setup
-st.set_page_config(page_title="BigQuery Data Warehouse Monitor", layout="wide")
+st.set_page_config(page_title="Postgres Data Warehouse Monitor", layout="wide")
 
-st.title("🛍️ Enterprise BigQuery Analytics Monitor")
-st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Google BigQuery**.")
+st.title("🛍️ Enterprise Neon Postgres Analytics Monitor")
+st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Neon PostgreSQL**.")
 
-# Infrastructure Routing Constants
-PROJECT_ID = "analytics-engineering-learning"
-
-def clean_private_key(raw_key):
-    """Enforces standard 64-character RFC 7468 PEM line wrapping to eliminate padding errors."""
-    if not isinstance(raw_key, str):
-        return raw_key
-    # Strip structural header boundaries
-    processed = raw_key.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
-    # Erase text-escapes, newlines, carriage returns, and spaces
-    processed = processed.replace("\\n", "").replace("\n", "").replace("\r", "")
-    base64_content = "".join(processed.split())
-    
-    # Strictly split the base64 data into standard 64-character blocks
-    lines = [base64_content[i:i+64] for i in range(0, len(base64_content), 64)]
-    return "-----BEGIN PRIVATE KEY-----\n" + "\n".join(lines) + "\n-----END PRIVATE KEY-----\n"
-
-@st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
-def fetch_bigquery_analytics_data():
-    """Establishes a secure connection using flat cloud configuration secrets with automated string repair."""
+@st.cache_data(ttl=60) # Caches data for 60 seconds to protect database compute hours limits
+def fetch_postgres_analytics_data():
+    """Establishes a secure connection to the Neon Postgres database warehouse."""
     try:
-        # Check for direct flat secret variables
-        if "private_key" in st.secrets:
-            # Route through the self-healing layout line-wrapper filter
-            pkey = clean_private_key(st.secrets["private_key"])
-                
-            creds_dict = {
-                "type": st.secrets["type"],
-                "project_id": st.secrets["project_id"],
-                "private_key_id": st.secrets["private_key_id"],
-                "private_key": pkey,
-                "client_email": st.secrets["client_email"],
-                "client_id": st.secrets["client_id"],
-                "auth_uri": st.secrets["auth_uri"],
-                "token_uri": st.secrets["token_uri"],
-                "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
-                "client_x509_cert_url": st.secrets["client_x509_cert_url"],
-                "universe_domain": st.secrets.get("universe_domain", "googleapis.com")
-            }
-            credentials = service_account.Credentials.from_service_account_info(creds_dict)
+        # Check if running on Streamlit Cloud secure secrets keyring
+        if "DATABASE_URL" in st.secrets:
+            db_url = st.secrets["DATABASE_URL"]
         else:
-            # Fallback to local path for your offline development environment
-            CREDS_PATH = "D:/Enterprise-Postgres-MDS/gcp_creds.json"
-            credentials = service_account.Credentials.from_service_account_file(CREDS_PATH)
+            # Fallback to local connection string for offline development environment
+            db_url = os.getenv("DATABASE_URL", "postgresql://localhost:5432/neondb")
             
-        client = bigquery.Client(credentials=credentials, project=PROJECT_ID)
-        
-        # Target your pristine dbt final fact table mart
-        query = f"SELECT * FROM `{PROJECT_ID}.analytics.fct_orders`;"
-        df = client.query(query).to_dataframe()
+        # Initialize connection engine
+        conn = psycopg2.connect(db_url)
+        query = "SELECT * FROM analytics.fct_orders;"
+        df = pd.read_sql_query(query, conn)
+        conn.close()
         return df
     except Exception as e:
-        st.error(f"❌ BigQuery Warehouse Linkage Error: {e}")
+        st.error(f"❌ Postgres Warehouse Linkage Error: {e}")
         return pd.DataFrame()
 
 # Execute data extraction pipeline
-df_metrics = fetch_bigquery_analytics_data()
+df_metrics = fetch_postgres_analytics_data()
 
 if not df_metrics.empty:
     # --- KPI Blocks ---
@@ -123,4 +86,4 @@ if not df_metrics.empty:
     st.subheader("📋 Core Warehouse Ledger View (`analytics.fct_orders`)")
     st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 else:
-    st.warning("⚠️ BigQuery analytical ledger is currently unpopulated. Run your Dagster pipeline to stream metrics.")
+    st.warning("⚠️ Postgres analytical ledger is currently unpopulated. Run your Dagster pipeline to stream metrics.")
