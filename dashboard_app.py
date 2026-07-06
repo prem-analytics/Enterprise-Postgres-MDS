@@ -33,24 +33,26 @@ def fetch_bigquery_analytics_data():
         # -----------------------------
         else:
 
-            st.write("Secret keys:", list(st.secrets["gcp_service_account"].keys()))
+            info = dict(st.secrets["gcp_service_account"])
 
-            pk = st.secrets["gcp_service_account"]["private_key"]
+            st.write("Secret keys:", list(info.keys()))
 
-            st.write("Starts with:", repr(pk[:40]))
-            st.write("Ends with:", repr(pk[-40:]))
-            st.write("Length:", len(pk))
+            # Convert \n into real newlines
+            info["private_key"] = info["private_key"].replace("\\n", "\n")
 
-            credentials = service_account.Credentials.from_service_account_info(
-                dict(st.secrets["gcp_service_account"])
-            )
+            # Debug
+            st.write("Starts with:", repr(info["private_key"][:40]))
+            st.write("Ends with:", repr(info["private_key"][-40:]))
+            st.write("Length:", len(info["private_key"]))
 
-            client = bigquery.Client(
+            credentials = service_account.Credentials.from_service_account_info(info)
+
+        client = bigquery.Client(
                 credentials=credentials,
                 project=PROJECT_ID
             )
 
-            query = f"""
+        query = f"""
             SELECT *
             FROM `{PROJECT_ID}.analytics.fct_orders`
             """
