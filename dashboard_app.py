@@ -20,19 +20,9 @@ PROJECT_ID = "analytics-engineering-learning"
 def fetch_bigquery_analytics_data():
     """Establishes a secure connection using either cloud secrets or local service keys."""
     try:
-        # 🌟 ENTERPRISE CLOUD FIX: Check if running on Streamlit Cloud secure secrets keyring
-        if "gcp_service_account" in st.secrets:
-            creds_info = st.secrets["gcp_service_account"]
-            # Flexibly handle both a raw JSON string or a native TOML dictionary object
-            if isinstance(creds_info, str):
-                creds_dict = json.loads(creds_info)
-            else:
-                creds_dict = dict(creds_info)
-                
-            # 🔑 FIX THE PEM PADDING ERROR: Convert literal '\n' text into real clean newlines
-            if "private_key" in creds_dict:
-                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-                
+        # 🌟 BULLETPROOF CLUID FIX: Parse the raw JSON directly to avoid TOML escaping issues
+        if "gcp_creds_json" in st.secrets:
+            creds_dict = json.loads(st.secrets["gcp_creds_json"])
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
         else:
             # Fallback to local path for your offline development environment
