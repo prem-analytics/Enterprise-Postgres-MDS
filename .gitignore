@@ -10,7 +10,7 @@ __pycache__/
 *.pyc
 
 # Dagster local runtime states and history caches
-.tmp_dagster_home_3x/
+.tmp_dagster_home_*/
 logs/
 *.db
 *.sqlite
@@ -19,7 +19,6 @@ logs/
 target/
 dbt_packages/
 dbt_modules/
-logs/
 postgres_pipeline/target/
 postgres_pipeline/dbt_packages/
 postgres_pipeline/logs/
@@ -27,6 +26,3 @@ postgres_pipeline/logs/
 # Operating system system files
 .DS_Store
 Thumbs.db
-
-# Catch all randomized temporary Dagster home directories
-.tmp_dagster_home_*/
