@@ -28,6 +28,11 @@ def fetch_bigquery_analytics_data():
                 creds_dict = json.loads(creds_info)
             else:
                 creds_dict = dict(creds_info)
+                
+            # 🔑 FIX THE PEM PADDING ERROR: Convert literal '\n' text into real clean newlines
+            if "private_key" in creds_dict:
+                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
         else:
             # Fallback to local path for your offline development environment
