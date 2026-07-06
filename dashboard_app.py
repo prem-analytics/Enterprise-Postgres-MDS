@@ -31,13 +31,14 @@ def fetch_bigquery_analytics_data():
         # If a cloud secret key is found, process it safely
         if creds_info is not None:
             if isinstance(creds_info, str):
-                # Clean up any double-escaped newlines inside raw string blocks
-                cleaned_info = creds_info.replace("\\n", "\n")
-                creds_dict = json.loads(cleaned_info)
+                # Natively load the JSON string without corrupting its raw control characters
+                creds_dict = json.loads(creds_info)
             else:
                 creds_dict = dict(creds_info)
-                if "private_key" in creds_dict:
-                    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                
+            # 🔑 SAFE POSITION: Clean up private key newline padding *after* parsing into a dictionary
+            if "private_key" in creds_dict and isinstance(creds_dict["private_key"], str):
+                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
                     
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
         else:
