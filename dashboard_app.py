@@ -35,15 +35,7 @@ def fetch_bigquery_analytics_data():
 
             info = dict(st.secrets["gcp_service_account"])
 
-            st.write("Secret keys:", list(info.keys()))
-
-            # Convert \n into real newlines
             info["private_key"] = info["private_key"].replace("\\n", "\n")
-
-            # Debug
-            st.write("Starts with:", repr(info["private_key"][:40]))
-            st.write("Ends with:", repr(info["private_key"][-40:]))
-            st.write("Length:", len(info["private_key"]))
 
             credentials = service_account.Credentials.from_service_account_info(info)
 
