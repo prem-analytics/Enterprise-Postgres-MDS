@@ -18,11 +18,27 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection using either cloud secrets or local service keys."""
+    """Establishes a secure connection checking multiple secret key formats for maximum resilience."""
     try:
-        # 🌟 BULLETPROOF CLUID FIX: Parse the raw JSON directly to avoid TOML escaping issues
+        creds_info = None
+        
+        # 🌟 UNIVERSAL CLOUD CHECKER: Look for any matching secrets keys
         if "gcp_creds_json" in st.secrets:
-            creds_dict = json.loads(st.secrets["gcp_creds_json"])
+            creds_info = st.secrets["gcp_creds_json"]
+        elif "gcp_service_account" in st.secrets:
+            creds_info = st.secrets["gcp_service_account"]
+
+        # If a cloud secret key is found, process it safely
+        if creds_info is not None:
+            if isinstance(creds_info, str):
+                # Clean up any double-escaped newlines inside raw string blocks
+                cleaned_info = creds_info.replace("\\n", "\n")
+                creds_dict = json.loads(cleaned_info)
+            else:
+                creds_dict = dict(creds_info)
+                if "private_key" in creds_dict:
+                    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                    
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
         else:
             # Fallback to local path for your offline development environment
