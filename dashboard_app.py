@@ -1,6 +1,5 @@
 import os
 import json
-import base64
 import pathlib
 import streamlit as st
 import pandas as pd
@@ -19,27 +18,28 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection using either a cloud base64 string or local service keys."""
+    """Establishes a secure connection checking for flat cloud configuration variables."""
     try:
-        # 🌟 FOOLPROOF BASE64 CLOUD CHECKER
-        if "gcp_creds_b64" in st.secrets:
-            b64_data = st.secrets["gcp_creds_b64"]
-            # Decode the unbroken text string straight back into clean raw JSON
-            json_creds = base64.b64decode(b64_data).decode("utf-8")
-            creds_dict = json.loads(json_creds)
+        # 🌟 FLAT KEYS CHECKER: Checks for direct flat secret variables
+        if "private_key" in st.secrets:
+            pkey = st.secrets["private_key"]
+            if isinstance(pkey, str):
+                pkey = pkey.replace("\\n", "\n")
+                
+            creds_dict = {
+                "type": st.secrets["type"],
+                "project_id": st.secrets["project_id"],
+                "private_key_id": st.secrets["private_key_id"],
+                "private_key": pkey,
+                "client_email": st.secrets["client_email"],
+                "client_id": st.secrets["client_id"],
+                "auth_uri": st.secrets["auth_uri"],
+                "token_uri": st.secrets["token_uri"],
+                "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+                "client_x509_cert_url": st.secrets["client_x509_cert_url"],
+                "universe_domain": st.secrets.get("universe_domain", "googleapis.com")
+            }
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
-            
-        elif "gcp_service_account" in st.secrets or "gcp_creds_json" in st.secrets:
-            # Traditional fallback parsing layers
-            creds_info = st.secrets.get("gcp_service_account") or st.secrets.get("gcp_creds_json")
-            if isinstance(creds_info, str):
-                creds_dict = json.loads(creds_info)
-            else:
-                creds_dict = dict(creds_info)
-            if "private_key" in creds_dict and isinstance(creds_dict["private_key"], str):
-                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-            credentials = service_account.Credentials.from_service_account_info(creds_dict)
-            
         else:
             # Fallback to local path for your offline development environment
             CREDS_PATH = "D:/Enterprise-Postgres-MDS/gcp_creds.json"
