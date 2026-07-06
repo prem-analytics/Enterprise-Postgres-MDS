@@ -22,31 +22,35 @@ def fetch_bigquery_analytics_data():
         if os.path.exists("gcp_creds.json"):
             credentials = service_account.Credentials.from_service_account_file("gcp_creds.json")
             
-        # 2. Production Environment Omni-Detection Engine
+        # 2. Production Environment Self-Healing Engine
         else:
             creds_dict = None
-            
-            # Scenario A: Pasted as a flat list at the root of the Secrets panel
             if "private_key" in st.secrets:
                 creds_dict = dict(st.secrets)
-            # Scenario B: Pasted under a [gcp_service_account] section block
             elif "gcp_service_account" in st.secrets:
                 creds_dict = dict(st.secrets["gcp_service_account"])
-            # Scenario C: Pasted as a single compressed string block
             elif "BIGQUERY_JSON_STRING" in st.secrets:
                 creds_dict = json.loads(st.secrets["BIGQUERY_JSON_STRING"])
                 
             if creds_dict is not None:
-                if "private_key" in creds_dict:
-                    # 🛡️ FIX TOML INDENTATION: Clean up escaped text and strip out hidden margins
-                    pk = creds_dict["private_key"].replace("\\n", "\n")
-                    pk = "\n".join([line.strip() for line in pk.split("\n")])
-                    creds_dict["private_key"] = pk
-                    
-                credentials = service_account.Credentials.from_service_account_info(creds_dict)
+                cleaned_creds = {}
+                for k, v in creds_dict.items():
+                    if isinstance(v, str):
+                        val = v.strip()
+                        if k == "private_key":
+                            # Fix newline characters for the cryptographic block
+                            val = val.replace("\\n", "\n")
+                            val = "\n".join([line.strip() for line in val.split("\n") if line.strip()])
+                        else:
+                            # 🛡️ SELF-HEALING TRICK: Strip out any hidden split lines or text wrapping spaces from URLs/IDs
+                            val = val.replace("\n", "").replace(" ", "").replace("\r", "")
+                        cleaned_creds[k] = val
+                    else:
+                        cleaned_creds[k] = v
+                        
+                credentials = service_account.Credentials.from_service_account_info(cleaned_creds)
             else:
-                found_keys = list(st.secrets.keys())
-                raise FileNotFoundError(f"No credential blocks detected. Active configuration keys found: {found_keys}")
+                raise FileNotFoundError("No active configuration keys found inside Streamlit secrets.")
             
         client = bigquery.Client(credentials=credentials, project=PROJECT_ID)
         
