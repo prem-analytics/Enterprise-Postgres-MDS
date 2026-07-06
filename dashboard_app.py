@@ -37,12 +37,14 @@ def fetch_bigquery_analytics_data():
                 creds_dict = json.loads(st.secrets["BIGQUERY_JSON_STRING"])
                 
             if creds_dict is not None:
-                # 🛡️ Automatically clean internal hidden newline sequence mismatches
                 if "private_key" in creds_dict:
-                    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                    # 🛡️ FIX TOML INDENTATION: Clean up escaped text and strip out hidden margins
+                    pk = creds_dict["private_key"].replace("\\n", "\n")
+                    pk = "\n".join([line.strip() for line in pk.split("\n")])
+                    creds_dict["private_key"] = pk
+                    
                 credentials = service_account.Credentials.from_service_account_info(creds_dict)
             else:
-                # Helpful debug visualization to see what keys actually exist inside your settings console
                 found_keys = list(st.secrets.keys())
                 raise FileNotFoundError(f"No credential blocks detected. Active configuration keys found: {found_keys}")
             
