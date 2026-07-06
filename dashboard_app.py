@@ -16,24 +16,35 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60)
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection to BigQuery using file-based or native secrets block."""
+    """Establishes a secure connection to BigQuery using file-based or multi-fallback secrets detection."""
     try:
-        # 1. Local Development: Read directly from your clean local file
+        # 1. Local Development Fallback
         if os.path.exists("gcp_creds.json"):
             credentials = service_account.Credentials.from_service_account_file("gcp_creds.json")
             
-        # 2. Production: Read from Streamlit Cloud Secrets native table block
-        elif "gcp_service_account" in st.secrets:
-            # Convert Streamlit's SecretProxy object into a standard python dictionary
-            creds_dict = dict(st.secrets["gcp_service_account"])
-            
-            # 🛡️ SENIOR DEV TRICK: Automatically heal mangled or literal newline strings from copy-pasting
-            if "private_key" in creds_dict:
-                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-                
-            credentials = service_account.Credentials.from_service_account_info(creds_dict)
+        # 2. Production Environment Omni-Detection Engine
         else:
-            raise FileNotFoundError("Authentication credentials not found locally or in Streamlit Cloud Secrets.")
+            creds_dict = None
+            
+            # Scenario A: Pasted as a flat list at the root of the Secrets panel
+            if "private_key" in st.secrets:
+                creds_dict = dict(st.secrets)
+            # Scenario B: Pasted under a [gcp_service_account] section block
+            elif "gcp_service_account" in st.secrets:
+                creds_dict = dict(st.secrets["gcp_service_account"])
+            # Scenario C: Pasted as a single compressed string block
+            elif "BIGQUERY_JSON_STRING" in st.secrets:
+                creds_dict = json.loads(st.secrets["BIGQUERY_JSON_STRING"])
+                
+            if creds_dict is not None:
+                # 🛡️ Automatically clean internal hidden newline sequence mismatches
+                if "private_key" in creds_dict:
+                    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                credentials = service_account.Credentials.from_service_account_info(creds_dict)
+            else:
+                # Helpful debug visualization to see what keys actually exist inside your settings console
+                found_keys = list(st.secrets.keys())
+                raise FileNotFoundError(f"No credential blocks detected. Active configuration keys found: {found_keys}")
             
         client = bigquery.Client(credentials=credentials, project=PROJECT_ID)
         
