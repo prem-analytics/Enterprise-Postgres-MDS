@@ -16,20 +16,27 @@ st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Google 
 # Infrastructure Routing Constants
 PROJECT_ID = "analytics-engineering-learning"
 
+def clean_private_key(raw_key):
+    """Resilient cleaning filter that strips out hidden layout formatting typos and spaces."""
+    if not isinstance(raw_key, str):
+        return raw_key
+    # Replace literal '\n' string markers and line breaks with spaces
+    processed = raw_key.replace("\\n", " ").replace("\n", " ")
+    # Temporarily remove header boundaries to cleanly isolate the inner token data
+    processed = processed.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
+    # Erase every single space and carriage return, yielding an unbroken base64 string
+    base64_content = "".join(processed.split())
+    # Reassemble a clean structural PEM container block
+    return f"-----BEGIN PRIVATE KEY-----\n{base64_content}\n-----END PRIVATE KEY-----\n"
+
 @st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection and automatically self-heals private key formatting string bugs."""
+    """Establishes a secure connection using flat cloud configuration secrets with automated string repair."""
     try:
         # Check for direct flat secret variables
         if "private_key" in st.secrets:
-            pkey = st.secrets["private_key"]
-            if isinstance(pkey, str):
-                # 🧼 SELF-HEALING LAYER: Convert raw '\n' strings to true physical line breaks
-                pkey = pkey.replace("\\n", "\n")
-                
-                # 🧼 SANITIZATION LAYER: Strip trailing spaces, carriage returns (\r), and empty lines
-                clean_lines = [line.strip() for line in pkey.split("\n") if line.strip()]
-                pkey = "\n".join(clean_lines)
+            # Route through the self-healing layout clean filter
+            pkey = clean_private_key(st.secrets["private_key"])
                 
             creds_dict = {
                 "type": st.secrets["type"],
@@ -65,7 +72,6 @@ df_metrics = fetch_bigquery_analytics_data()
 
 if not df_metrics.empty:
     # --- KPI Blocks ---
-    st.columns(1) # Visual spacing layout buffer
     kpi1, kpi2, kpi3 = st.columns(3)
     
     with kpi1:
