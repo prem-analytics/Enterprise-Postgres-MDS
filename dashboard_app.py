@@ -16,50 +16,46 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60)
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection to BigQuery using file-based or multi-fallback secrets detection."""
+    """Connect to BigQuery and fetch analytics data."""
+
     try:
-        # 1. Local Development Fallback
+
+        # -----------------------------
+        # LOCAL DEVELOPMENT
+        # -----------------------------
         if os.path.exists("gcp_creds.json"):
-            credentials = service_account.Credentials.from_service_account_file("gcp_creds.json")
-            
-        # 2. Production Environment Self-Healing Engine
+
+            credentials = service_account.Credentials.from_service_account_file(
+                "gcp_creds.json"
+            )
+
+        # -----------------------------
+        # STREAMLIT CLOUD
+        # -----------------------------
         else:
-            creds_dict = None
-            if "private_key" in st.secrets:
-                creds_dict = dict(st.secrets)
-            elif "gcp_service_account" in st.secrets:
-                creds_dict = dict(st.secrets["gcp_service_account"])
-            elif "BIGQUERY_JSON_STRING" in st.secrets:
-                creds_dict = json.loads(st.secrets["BIGQUERY_JSON_STRING"])
-                
-            if creds_dict is not None:
-                cleaned_creds = {}
-                for k, v in creds_dict.items():
-                    if isinstance(v, str):
-                        val = v.strip()
-                        if k == "private_key":
-                            # Fix newline characters for the cryptographic block
-                            val = val.replace("\\n", "\n")
-                            val = "\n".join([line.strip() for line in val.split("\n") if line.strip()])
-                        else:
-                            # 🛡️ SELF-HEALING TRICK: Strip out any hidden split lines or text wrapping spaces from URLs/IDs
-                            val = val.replace("\n", "").replace(" ", "").replace("\r", "")
-                        cleaned_creds[k] = val
-                    else:
-                        cleaned_creds[k] = v
-                        
-                credentials = service_account.Credentials.from_service_account_info(cleaned_creds)
-            else:
-                raise FileNotFoundError("No active configuration keys found inside Streamlit secrets.")
-            
-        client = bigquery.Client(credentials=credentials, project=PROJECT_ID)
-        
-        # Target your full 25,000 row production e-commerce mart table
-        query = f"SELECT * FROM `{PROJECT_ID}.analytics.fct_orders`;"
+
+            credentials = service_account.Credentials.from_service_account_info(
+                dict(st.secrets["gcp_service_account"])
+            )
+
+        client = bigquery.Client(
+            credentials=credentials,
+            project=PROJECT_ID
+        )
+
+        query = f"""
+        SELECT *
+        FROM `{PROJECT_ID}.analytics.fct_orders`
+        """
+
         df = client.query(query).to_dataframe()
+
         return df
+
     except Exception as e:
-        st.error(f"❌ BigQuery Warehouse Linkage Error: {e}")
+
+        st.exception(e)
+
         return pd.DataFrame()
 
 # Execute data extraction pipeline
