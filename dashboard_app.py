@@ -18,13 +18,18 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection checking for flat cloud configuration variables."""
+    """Establishes a secure connection and automatically self-heals private key formatting string bugs."""
     try:
-        # 🌟 FLAT KEYS CHECKER: Checks for direct flat secret variables
+        # Check for direct flat secret variables
         if "private_key" in st.secrets:
             pkey = st.secrets["private_key"]
             if isinstance(pkey, str):
+                # 🧼 SELF-HEALING LAYER: Convert raw '\n' strings to true physical line breaks
                 pkey = pkey.replace("\\n", "\n")
+                
+                # 🧼 SANITIZATION LAYER: Strip trailing spaces, carriage returns (\r), and empty lines
+                clean_lines = [line.strip() for line in pkey.split("\n") if line.strip()]
+                pkey = "\n".join(clean_lines)
                 
             creds_dict = {
                 "type": st.secrets["type"],
@@ -60,6 +65,7 @@ df_metrics = fetch_bigquery_analytics_data()
 
 if not df_metrics.empty:
     # --- KPI Blocks ---
+    st.columns(1) # Visual spacing layout buffer
     kpi1, kpi2, kpi3 = st.columns(3)
     
     with kpi1:
