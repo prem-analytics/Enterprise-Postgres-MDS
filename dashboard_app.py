@@ -17,17 +17,18 @@ st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Google 
 PROJECT_ID = "analytics-engineering-learning"
 
 def clean_private_key(raw_key):
-    """Resilient cleaning filter that strips out hidden layout formatting typos and spaces."""
+    """Enforces standard 64-character RFC 7468 PEM line wrapping to eliminate padding errors."""
     if not isinstance(raw_key, str):
         return raw_key
-    # Replace literal '\n' string markers and line breaks with spaces
-    processed = raw_key.replace("\\n", " ").replace("\n", " ")
-    # Temporarily remove header boundaries to cleanly isolate the inner token data
-    processed = processed.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
-    # Erase every single space and carriage return, yielding an unbroken base64 string
+    # Strip structural header boundaries
+    processed = raw_key.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")
+    # Erase text-escapes, newlines, carriage returns, and spaces
+    processed = processed.replace("\\n", "").replace("\n", "").replace("\r", "")
     base64_content = "".join(processed.split())
-    # Reassemble a clean structural PEM container block
-    return f"-----BEGIN PRIVATE KEY-----\n{base64_content}\n-----END PRIVATE KEY-----\n"
+    
+    # Strictly split the base64 data into standard 64-character blocks
+    lines = [base64_content[i:i+64] for i in range(0, len(base64_content), 64)]
+    return "-----BEGIN PRIVATE KEY-----\n" + "\n".join(lines) + "\n-----END PRIVATE KEY-----\n"
 
 @st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
 def fetch_bigquery_analytics_data():
@@ -35,7 +36,7 @@ def fetch_bigquery_analytics_data():
     try:
         # Check for direct flat secret variables
         if "private_key" in st.secrets:
-            # Route through the self-healing layout clean filter
+            # Route through the self-healing layout line-wrapper filter
             pkey = clean_private_key(st.secrets["private_key"])
                 
             creds_dict = {
