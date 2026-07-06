@@ -1,5 +1,4 @@
 import os
-import json
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -34,19 +33,27 @@ def fetch_bigquery_analytics_data():
         # -----------------------------
         else:
 
+            st.write("Secret keys:", list(st.secrets["gcp_service_account"].keys()))
+
+            pk = st.secrets["gcp_service_account"]["private_key"]
+
+            st.write("Starts with:", repr(pk[:40]))
+            st.write("Ends with:", repr(pk[-40:]))
+            st.write("Length:", len(pk))
+
             credentials = service_account.Credentials.from_service_account_info(
                 dict(st.secrets["gcp_service_account"])
             )
 
-        client = bigquery.Client(
-            credentials=credentials,
-            project=PROJECT_ID
-        )
+            client = bigquery.Client(
+                credentials=credentials,
+                project=PROJECT_ID
+            )
 
-        query = f"""
-        SELECT *
-        FROM `{PROJECT_ID}.analytics.fct_orders`
-        """
+            query = f"""
+            SELECT *
+            FROM `{PROJECT_ID}.analytics.fct_orders`
+            """
 
         df = client.query(query).to_dataframe()
 
