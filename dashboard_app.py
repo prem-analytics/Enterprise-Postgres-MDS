@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 import pathlib
 import streamlit as st
 import pandas as pd
@@ -18,29 +19,27 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60) # Caches results for 60 seconds to protect your BigQuery query bytes limits
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection checking multiple secret key formats for maximum resilience."""
+    """Establishes a secure connection using either a cloud base64 string or local service keys."""
     try:
-        creds_info = None
-        
-        # 🌟 UNIVERSAL CLOUD CHECKER: Look for any matching secrets keys
-        if "gcp_creds_json" in st.secrets:
-            creds_info = st.secrets["gcp_creds_json"]
-        elif "gcp_service_account" in st.secrets:
-            creds_info = st.secrets["gcp_service_account"]
-
-        # If a cloud secret key is found, process it safely
-        if creds_info is not None:
+        # 🌟 FOOLPROOF BASE64 CLOUD CHECKER
+        if "gcp_creds_b64" in st.secrets:
+            b64_data = st.secrets["gcp_creds_b64"]
+            # Decode the unbroken text string straight back into clean raw JSON
+            json_creds = base64.b64decode(b64_data).decode("utf-8")
+            creds_dict = json.loads(json_creds)
+            credentials = service_account.Credentials.from_service_account_info(creds_dict)
+            
+        elif "gcp_service_account" in st.secrets or "gcp_creds_json" in st.secrets:
+            # Traditional fallback parsing layers
+            creds_info = st.secrets.get("gcp_service_account") or st.secrets.get("gcp_creds_json")
             if isinstance(creds_info, str):
-                # Natively load the JSON string without corrupting its raw control characters
                 creds_dict = json.loads(creds_info)
             else:
                 creds_dict = dict(creds_info)
-                
-            # 🔑 SAFE POSITION: Clean up private key newline padding *after* parsing into a dictionary
             if "private_key" in creds_dict and isinstance(creds_dict["private_key"], str):
                 creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-                    
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
+            
         else:
             # Fallback to local path for your offline development environment
             CREDS_PATH = "D:/Enterprise-Postgres-MDS/gcp_creds.json"
