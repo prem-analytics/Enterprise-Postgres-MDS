@@ -16,15 +16,21 @@ PROJECT_ID = "analytics-engineering-learning"
 
 @st.cache_data(ttl=60)
 def fetch_bigquery_analytics_data():
-    """Establishes a secure connection to BigQuery using file-based or secrets fallback."""
+    """Establishes a secure connection to BigQuery using file-based or native secrets block."""
     try:
         # 1. Local Development: Read directly from your clean local file
         if os.path.exists("gcp_creds.json"):
             credentials = service_account.Credentials.from_service_account_file("gcp_creds.json")
             
-        # 2. Production: Read from Streamlit Cloud Secrets
-        elif "BIGQUERY_JSON_STRING" in st.secrets:
-            creds_dict = json.loads(st.secrets["BIGQUERY_JSON_STRING"])
+        # 2. Production: Read from Streamlit Cloud Secrets native table block
+        elif "gcp_service_account" in st.secrets:
+            # Convert Streamlit's SecretProxy object into a standard python dictionary
+            creds_dict = dict(st.secrets["gcp_service_account"])
+            
+            # 🛡️ SENIOR DEV TRICK: Automatically heal mangled or literal newline strings from copy-pasting
+            if "private_key" in creds_dict:
+                creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+                
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
         else:
             raise FileNotFoundError("Authentication credentials not found locally or in Streamlit Cloud Secrets.")
