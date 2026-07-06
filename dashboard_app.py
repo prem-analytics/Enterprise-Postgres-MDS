@@ -22,7 +22,12 @@ def fetch_bigquery_analytics_data():
     try:
         # 🌟 ENTERPRISE CLOUD FIX: Check if running on Streamlit Cloud secure secrets keyring
         if "gcp_service_account" in st.secrets:
-            creds_dict = json.loads(st.secrets["gcp_service_account"])
+            creds_info = st.secrets["gcp_service_account"]
+            # Flexibly handle both a raw JSON string or a native TOML dictionary object
+            if isinstance(creds_info, str):
+                creds_dict = json.loads(creds_info)
+            else:
+                creds_dict = dict(creds_info)
             credentials = service_account.Credentials.from_service_account_info(creds_dict)
         else:
             # Fallback to local path for your offline development environment
