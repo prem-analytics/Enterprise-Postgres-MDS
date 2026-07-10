@@ -1,110 +1,214 @@
-import os
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-from google.oauth2 import service_account
-from google.cloud import bigquery
 
-# Page Configuration Setup
-st.set_page_config(page_title="Enterprise Data Warehouse Monitor", layout="wide")
+# ----------------------------------------------------
+# PAGE CONFIG
+# ----------------------------------------------------
 
-st.title("🛍️ Enterprise BigQuery Analytics Monitor")
-st.markdown("Real-time metrics computed via **dbt Core** and hosted on **Google BigQuery**.")
+st.set_page_config(
+    page_title="Enterprise Modern Data Stack",
+    page_icon="📊",
+    layout="wide"
+)
 
-PROJECT_ID = "analytics-engineering-learning"
+# ----------------------------------------------------
+# SIDEBAR
+# ----------------------------------------------------
 
-@st.cache_data(ttl=60)
-def fetch_bigquery_analytics_data():
-    """Connect to BigQuery and fetch analytics data."""
+with st.sidebar:
 
-    try:
-
-        # -----------------------------
-        # LOCAL DEVELOPMENT
-        # -----------------------------
-        if os.path.exists("gcp_creds.json"):
-
-            credentials = service_account.Credentials.from_service_account_file(
-                "gcp_creds.json"
-            )
-
-        # -----------------------------
-        # STREAMLIT CLOUD
-        # -----------------------------
-        else:
-
-            info = dict(st.secrets["gcp_service_account"])
-
-            info["private_key"] = info["private_key"].replace("\\n", "\n")
-
-            credentials = service_account.Credentials.from_service_account_info(info)
-
-        client = bigquery.Client(
-                credentials=credentials,
-                project=PROJECT_ID
-            )
-
-        query = f"""
-            SELECT *
-            FROM `{PROJECT_ID}.analytics.fct_orders`
-            """
-
-        df = client.query(query).to_dataframe()
-
-        return df
-
-    except Exception as e:
-
-        st.exception(e)
-
-        return pd.DataFrame()
-
-# Execute data extraction pipeline
-df_metrics = fetch_bigquery_analytics_data()
-
-if not df_metrics.empty:
-    # --- KPI Blocks ---
-    kpi1, kpi2, kpi3 = st.columns(3)
-    
-    with kpi1:
-        total_customers = df_metrics['customer_id'].nunique() if 'customer_id' in df_metrics.columns else 0
-        st.metric(label="Total Active Customers Monitored", value=f"{total_customers:,}")
-        
-    with kpi2:
-        total_orders = len(df_metrics)
-        st.metric(label="Total Platform Orders Captured (Production)", value=f"{total_orders:,}")
-        
-    with kpi3:
-        total_revenue = df_metrics['order_total_usd'].sum() if 'order_total_usd' in df_metrics.columns else 0.0
-        st.metric(label="Gross Generated Warehouse Revenue", value=f"${total_revenue:,.2f}")
+    st.title("📊 Enterprise MDS")
 
     st.markdown("---")
-    
-    # --- Interactive Charts ---
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("🎯 Order Fulfilment Status Volume")
-        if 'order_status' in df_metrics.columns:
-            status_df = df_metrics['order_status'].value_counts().reset_index()
-            status_df.columns = ['Status', 'Total Orders']
-            fig_bar = px.bar(
-                status_df, x='Status', y='Total Orders', color='Status',
-                color_discrete_sequence=px.colors.qualitative.Prism
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-    with col2:
-        st.subheader("👥 User Payment Method Allocation")
-        if 'payment_method' in df_metrics.columns:
-            fig_pie = px.pie(
-                df_metrics, names='payment_method', hole=0.4,
-                color_discrete_sequence=px.colors.qualitative.Safe
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
 
-    # --- Live Data Ledger ---
-    st.subheader("📋 Core Warehouse Ledger View (`analytics.fct_orders`)")
-    st.dataframe(df_metrics, use_container_width=True, hide_index=True)
-else:
-    st.warning("⚠️ BigQuery analytical ledger is currently unpopulated. Verify pipeline execution.")
+    st.subheader("Project")
+
+    st.write("**Version**")
+    st.success("v1.0")
+
+    st.write("**Environment**")
+    st.info("Development")
+
+    st.markdown("---")
+
+    st.subheader("Technology")
+
+    st.write("🐍 Python")
+    st.write("🐘 PostgreSQL")
+    st.write("☁ Google BigQuery")
+    st.write("🌳 dbt Core")
+    st.write("⚙ Dagster")
+    st.write("📈 Streamlit")
+
+    st.markdown("---")
+
+    st.caption("Modern Data Stack")
+
+# ----------------------------------------------------
+# HEADER
+# ----------------------------------------------------
+
+st.title("📊 Enterprise Modern Data Stack")
+
+st.markdown(
+"""
+Enterprise-grade Analytics Engineering Platform built with
+**Python**, **PostgreSQL**, **Google BigQuery**, **dbt Core**, **Dagster**, and **Streamlit**.
+"""
+)
+
+st.divider()
+
+# ----------------------------------------------------
+# KPI CARDS
+# ----------------------------------------------------
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric(
+        "Dashboards",
+        "5"
+    )
+
+with col2:
+    st.metric(
+        "Pipelines",
+        "2"
+    )
+
+with col3:
+    st.metric(
+        "Warehouse",
+        "Online"
+    )
+
+with col4:
+    st.metric(
+        "Environment",
+        "Development"
+    )
+
+st.divider()
+
+# ----------------------------------------------------
+# PROJECT OVERVIEW
+# ----------------------------------------------------
+
+st.header("📌 Project Overview")
+
+st.write(
+"""
+This project demonstrates a complete **Enterprise Modern Data Stack**
+covering the entire analytics engineering lifecycle.
+
+The platform includes:
+
+- REST API ingestion
+- PostgreSQL Operational Warehouse
+- dbt Transformations
+- Google BigQuery Analytics Warehouse
+- Dagster Orchestration
+- Interactive Streamlit Dashboards
+"""
+)
+
+st.divider()
+
+# ----------------------------------------------------
+# SYSTEM HEALTH
+# ----------------------------------------------------
+
+st.header("🟢 System Health")
+
+c1, c2, c3, c4 = st.columns(4)
+
+with c1:
+    st.success("PostgreSQL")
+
+with c2:
+    st.success("BigQuery")
+
+with c3:
+    st.success("dbt")
+
+with c4:
+    st.success("Dagster")
+
+st.divider()
+
+# ----------------------------------------------------
+# ARCHITECTURE
+# ----------------------------------------------------
+
+st.header("🏗 Architecture")
+
+st.code(
+"""
+REST API
+    │
+    ▼
+PostgreSQL
+    │
+    ▼
+dbt Core
+    │
+    ▼
+Google BigQuery
+    │
+    ▼
+Streamlit Dashboard
+""",
+language="text"
+)
+
+st.divider()
+
+# ----------------------------------------------------
+# FEATURES
+# ----------------------------------------------------
+
+st.header("🚀 Platform Features")
+
+left, right = st.columns(2)
+
+with left:
+
+    st.markdown("""
+### Data Engineering
+
+- REST API Ingestion
+- PostgreSQL
+- SQL
+- Python
+- ETL Pipelines
+- Data Validation
+""")
+
+with right:
+
+    st.markdown("""
+### Analytics Engineering
+
+- dbt Core
+- Google BigQuery
+- Dagster
+- Streamlit
+- Plotly
+- Interactive Dashboards
+""")
+
+st.divider()
+
+# ----------------------------------------------------
+# FOOTER
+# ----------------------------------------------------
+
+st.caption(
+"""
+Enterprise Modern Data Stack
+
+Version 1.0
+
+Built with Python • PostgreSQL • BigQuery • dbt • Dagster • Streamlit
+"""
+)

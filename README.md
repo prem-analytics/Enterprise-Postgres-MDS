@@ -1,12 +1,17 @@
 Markdown
-# 📊 Enterprise Multi-Engine Modern Data Stack (MDS) Pipeline
+# 📊 Enterprise Modern Data Stack (MDS)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://enterprise-app-mds-aclgz2gmz7bfiyvsygnmre.streamlit.app)
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![dbt Core](https://img.shields.io/badge/dbt-Core%20v1.8+-orange.svg)](https://www.getdbt.com/)
 [![Dagster](https://img.shields.io/badge/orchestration-Dagster-purple.svg)](https://dagster.io/)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue?logo=postgresql)
+![BigQuery](https://img.shields.io/badge/Google_BigQuery-Analytics-4285F4?logo=googlebigquery)
+![Google Cloud](https://img.shields.io/badge/Google_Cloud-BigQuery-4285F4?logo=googlecloud)
+![GitHub](https://img.shields.io/badge/GitHub-Version_Control-black?logo=github)
+![MIT License](https://img.shields.io/badge/License-MIT-green)
 
-An end-to-end, production-grade cloud analytics platform implementing a modern data stack architecture. The pipeline automates ingestion from third-party REST API endpoints, coordinates cross-engine synchronization between an operational PostgreSQL data store and a Google BigQuery cloud data warehouse, applies robust analytical modeling transformations via dbt Core, and exposes interactive business intelligence layers through Streamlit.
+An end-to-end, production-grade Modern Data Stack platform implementing cloud-native analytics engineering practices. The project automates data ingestion from third-party REST APIs, stores analytical datasets in Google BigQuery, models business-ready data using dbt Core, orchestrates workflows with Dagster, and delivers interactive business intelligence dashboards through Streamlit. PostgreSQL serves as the relational analytics environment for SQL development and downstream data modeling.
 
 ---
 
@@ -25,10 +30,23 @@ The framework organizes complex workflows into six decoupled execution layers to
 * **Scale-Out Compute:** Stores untransformed API responses directly inside cost-optimized BigQuery tables, utilizing massive parallel processing (MPP) capabilities to support heavy historical aggregations.
 * **Namespaces:** Tracks source state across isolated `raw` landing datasets and polished `analytics` marts.
 
-### 3️⃣ Hybrid Operational Warehouse (Neon PostgreSQL)
-* **Operational Mirroring:** Syncs curated transactional ledgers from the data lakehouse down to relational tables.
-* **BI Query Offloading:** Offloads active dashboard visualization queries to highly indexed relational tables to maintain strict query isolation and control cloud compute consumption limits.
-* **Schemas:** Segregates structures across initial `staging` views and consumption-ready `analytics` star schemas.
+### 3️⃣ Relational Analytics Layer (PostgreSQL)
+
+PostgreSQL serves as the relational analytics database within the Modern Data Stack.
+
+**Responsibilities**
+
+- Stores structured analytical datasets.
+- Supports dbt transformations and modeling.
+- Provides a relational environment for SQL development and testing.
+- Acts as the operational analytics database for downstream reporting.
+
+**Schemas**
+
+```text
+staging
+analytics
+```
 
 ### 4️⃣ Transformation & Data Quality Engineering (dbt Core™)
 * **Idempotent Data Modeling:** Transforms raw staging entries into analytical schemas using modular SQL structures.
@@ -50,27 +68,43 @@ The framework organizes complex workflows into six decoupled execution layers to
 
 ## 🔄 End-to-End Analytics Lineage
 
-> 💡 **VS Code Pro-Tip:** To see what your `README.md` actually looks like when rendered beautifully, press **`Ctrl + Shift + V`** (or `Cmd + Shift + V` on Mac) while inside the file. This opens the **Markdown Preview** window!
+```text
+🌐 REST API
+      │
+      ▼
+🐍 Python Ingestion
+      │
+      ▼
+☁️ Google BigQuery
+   (Raw Landing Zone)
+      │
+      ▼
+🐘 PostgreSQL
+ (Relational Analytics)
+      │
+      ▼
+🟧 dbt Core
+ (Models & Tests)
+      │
+      ▼
+🟣 Dagster
+ (Pipeline Orchestration)
+      │
+      ▼
+📊 Streamlit Dashboard
+```
 
----
-"""
-PIPELINE LINEAGE DOCUMENTATION:
+## ✅ Current Features
 
-🌐 Production REST API
-    │
-    ▼  [ Stateful Python Ingestion Engine ]
-☁️ Google BigQuery (Immutable Landing Zone)
-    │
-    ▼  [ High-Performance Sync Pipeline ]
-🐘 Neon PostgreSQL (Operational Analytics Core)
-    │
-    ▼  [ dbt Core Transformations & Validations ]
-🛠️ Directed Acyclic Graph (DAG Data Models)
-    │
-    ▼  [ Dagster Control Plane Orchestration ]
-📊 Live Streamlit Web UI Dashboard
-"""
----
+- REST API Data Ingestion
+- Google BigQuery Cloud Warehouse
+- PostgreSQL Relational Database
+- dbt Core Data Modeling
+- Dagster Pipeline Orchestration
+- Streamlit Interactive Dashboard
+- Plotly Business Visualizations
+- Secure Google Service Account Authentication
+- Cloud Deployment using Streamlit Community Cloud
 
 ## 🛠️ Integrated Technology Matrix
 
@@ -78,7 +112,7 @@ PIPELINE LINEAGE DOCUMENTATION:
 |:---|:---|:---|
 | **Programming Language** | Python 3.12 | Core Ingestion Logic & Custom ETL Scripts |
 | **Cloud Data Warehouse** | Google BigQuery | Scalable Cloud Compute & Large Scale Storage |
-| **Relational Store** | Neon PostgreSQL | Highly Indexed Operational Performance Layer |
+| **Relational Store** | PostgreSQL | Highly Indexed Operational Performance Layer |
 | **Transformation Engine**| dbt Core (v1.8+) | Analytical SQL Modeling & Automated Asset Testing |
 | **Orchestration Control**| Dagster | Declarative Asset-Based Pipeline Dependencies |
 | **Presentation Framework**| Streamlit | Interactive Portfolio UI & Component State Capture |
@@ -92,26 +126,157 @@ PIPELINE LINEAGE DOCUMENTATION:
 
 ```text
 Enterprise-Modern-Data-Stack/
-├── .gitignore                      # Prevents local credentials (.env, json) from entering remote tracking
-├── README.md                       # Comprehensive infrastructure blueprint documentation
-├── requirements.txt                # Fixed production-grade python dependencies package list
 │
-├── dashboard/
-│   └── dashboard_app.py            # Streamlit multi-engine reporting dashboard script
+├── 📁 config/
+│   └── config.py                   # Central application configuration
 │
-├── ingestion/
-│   └── ingest_to_postgres.py       # Standalone database transactional replication utility
+├── 📁 dashboard/
+│   ├── dashboard_app.py            # Streamlit analytics dashboard
+│   ├── README.md
+│   ├── assets/                     # CSS, icons, images
+│   └── pages/                      # Multi-page Streamlit apps
 │
-├── enterprise-bigquery-mds/
-│   └── [Pipeline Assets]           # Python cloud integration microservices & cloud pipelines
+├── 📁 docs/
+│   ├── Architecture.md
+│   ├── BigQuery.md
+│   ├── PostgreSQL.md
+│   ├── DataFlow.md
+│   └── Deployment.md
 │
-├── postgres_pipeline/
-│   ├── dbt_project.yml             # Global configurations for the transformation engineering model
-│   ├── models/                     # Curated staging files and dimension/fact star schema definitions
-│   └── schema.yml                  # System quality expectations and core documentation blocks
+├── 📁 images/
+│   ├── architecture.png
+│   └── dashboard.png
 │
-└── orchestrator/
-    └── [Dagster Configurations]    # Deployment code for the orchestrator control plane assets
+├── 📁 ingestion/
+│   ├── ingest_to_postgres.py
+│   ├── api_client.py
+│   ├── validation.py
+│   ├── utils.py
+│   └── README.md
+│
+├── 📁 services/
+│   ├── bigquery_service.py         # BigQuery operations
+│   ├── postgres_service.py         # PostgreSQL operations
+│   └── README.md
+│
+├── 📁 pipelines/
+│   ├── bigquery_pipeline/
+│   ├── postgres_pipeline/
+│   └── README.md
+│
+├── 📁 orchestrator/
+│   ├── assets.py
+│   ├── jobs.py
+│   ├── schedules.py
+│   └── README.md
+│
+├── 📁 postgres_pipeline/
+│   ├── models/
+│   ├── macros/
+│   ├── seeds/
+│   ├── snapshots/
+│   ├── tests/
+│   ├── dbt_project.yml
+│   ├── packages.yml
+│   ├── profiles.yml
+│   └── README.md
+│
+├── 📁 sql/
+│   ├── analytics.sql
+│   ├── dashboard_queries.sql
+│   └── reporting.sql
+│
+├── 📁 utils/
+│   ├── logger.py
+│   ├── helpers.py
+│   └── constants.py
+│
+├── 📁 models/
+│   ├── customer.py
+│   ├── order.py
+│   └── payment.py
+│
+├── 📁 logs/
+│   └── README.md
+│
+├── 📁 tests/
+│   ├── README.md
+│   ├── test_ingestion.py
+│   ├── test_bigquery.py
+│   ├── test_postgres.py
+│   └── test_dashboard.py
+│
+├── .env
+├── .gitignore
+├── LICENSE
+├── README.md
+└── requirements.txt
+```
+
+
+> **Note:** Some folders and files shown above (such as `assets/`, `pages/`, `api_client.py`, and `validation.py`) are part of the planned project architecture and will be added in future development phases.
+
+## 📦 Project Modules
+
+| Module | Description |
+|---------|-------------|
+| **Python Ingestion** | Extracts data from external REST APIs using authenticated requests and incremental loading strategies. |
+| **Google BigQuery** | Stores raw analytical datasets and serves as the cloud data warehouse. |
+| **PostgreSQL** | Provides a relational analytics layer for downstream reporting and SQL-based analysis. |
+| **dbt Core** | Transforms raw data into analytics-ready models while performing automated data quality testing. |
+| **Dagster** | Orchestrates ingestion, transformation, and reporting workflows with asset-based execution. |
+| **Streamlit** | Provides an interactive web dashboard for real-time business intelligence and KPI reporting. |
+| **GitHub** | Manages source code, version control, and project documentation. |
+
+
+## 📈 Project Statistics
+
+| Metric | Value |
+|---------|-------|
+| Programming Language | Python 3.12 |
+| Cloud Platform | Google Cloud Platform |
+| Data Warehouse | Google BigQuery |
+| Relational Database | PostgreSQL |
+| Transformation Tool | dbt Core |
+| Orchestration Tool | Dagster |
+| Dashboard Framework | Streamlit |
+| Visualization Library | Plotly |
+| Version Control | Git & GitHub |
+| Configuration | Environment Variables (.env) |
+
+
+## 🚀 Quick Start
+
+Clone the repository:
+
+```bash
+git clone https://github.com/<your-username>/Enterprise-Modern-Data-Stack.git
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the Streamlit dashboard:
+
+```bash
+streamlit run dashboard/dashboard_app.py
+```
+
+Launch the Dagster UI:
+
+```bash
+dagster dev
+```
+
+Run dbt models:
+
+```bash
+dbt run
+```
+
 
 ## 🚀 Key Architectural Highlights
 
@@ -121,23 +286,32 @@ Enterprise-Modern-Data-Stack/
 
 ---
 
-## 📈 Dashboard Deliverables
+## 📈 Dashboard Features
 
-The deployed application translates deep analytical arrays into standard business reporting layouts:
+The Streamlit dashboard provides interactive business intelligence through:
 
-* **Executive Key Performance Indicators:** High-level summaries tracking active corporate customer populations, total operational volume counts, and gross platform revenue calculations.
-* **Order Fulfillment Segmentations:** Interactive distribution charts breaking down inventory states and delivery tracking volumes.
-* **Transactional Insights:** Interactive allocation charts analyzing system payment channel utilization rates.
-* **Core Ledger Inspection Window:** A filterable data display that lets users inspect underlying models directly from the database table arrays.
+- Executive KPI Cards
+- Customer Analytics
+- Revenue Monitoring
+- Order Status Distribution
+- Payment Method Analysis
+- Interactive Data Tables
+- Live BigQuery Analytics
 
 ---
 
-## 🔮 Strategic Enhancements Roadmap
+## 🔮 Future Enhancements
 
-* **Infrastructure as Code (IaC):** Standardize all cloud storage datasets and database access permissions using automated Terraform configuration scripts.
-* **Containerized Microservices:** Wrap the ingestion code, dbt models, and dashboard apps into independent Docker containers for consistent deployment across environments.
-* **Continuous Integration/Continuous Deployment:** Create automated GitHub Actions workflows to validate dbt model updates against staging environments before merging code.
-* **Advanced Data Observability:** Integrate advanced validation frameworks like Great Expectations alongside automated monitoring tools to alert teams to schema modifications or pipeline delays.
+- BigQuery → PostgreSQL Synchronization
+- Docker Containerization
+- Terraform Infrastructure as Code (IaC)
+- GitHub Actions CI/CD Pipeline
+- Great Expectations Data Validation
+- Looker Studio Integration
+- Automated Monitoring & Alerting
+- Data Lineage & Metadata Tracking
+- Unit & Integration Testing
+- Multi-Environment Deployment (Dev / Test / Prod)
 
 ---
 
