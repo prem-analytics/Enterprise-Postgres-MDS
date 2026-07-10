@@ -602,17 +602,25 @@ st.divider()
 
 st.header("✅ SQL Quality Report")
 
-quality = get_sql_quality(
-    details,
-    sql,
-    stats
-)
+if sql:
 
-st.dataframe(
-    quality,
-    hide_index=True,
-    width="stretch",
-)
+    quality = get_sql_quality(
+        details,
+        sql,
+        stats
+    )
+
+    st.dataframe(
+        quality,
+        hide_index=True,
+        width="stretch",
+    )
+
+else:
+
+    st.warning(
+        "SQL file not found, so SQL Quality Report cannot be generated."
+    )
 
 # ==========================================================
 # INTERACTIVE GRAPH
