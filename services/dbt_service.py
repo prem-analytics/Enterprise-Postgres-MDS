@@ -413,21 +413,27 @@ def get_model_sql(model_name, project):
     details = get_model_details(model_name, project)
 
     if not details:
+        print("No model details")
         return None
 
     path = details.get("original_file_path")
 
-    if not path:
-        return None
+    print("Original path:", path)
 
     if project == "postgres":
-        sql_path = os.path.join("postgres_pipeline", path)
+        sql_path = os.path.join(
+            "postgres_pipeline",
+            path
+        )
     else:
         sql_path = os.path.join(
             "enterprise-bigquery-mds",
             "bigquery_pipeline",
-            path,
+            path
         )
+
+    print("Looking for:", sql_path)
+    print("Exists:", os.path.exists(sql_path))
 
     if not os.path.exists(sql_path):
         return None
