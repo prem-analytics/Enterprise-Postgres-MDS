@@ -413,12 +413,15 @@ def get_model_sql(model_name, project):
     details = get_model_details(model_name, project)
 
     if not details:
-        print("No model details")
         return None
 
     path = details.get("original_file_path")
 
-    print("Original path:", path)
+    if not path:
+        return None
+
+    # Convert Windows/Linux separators
+    path = os.path.normpath(path.replace("\\", "/"))
 
     if project == "postgres":
         sql_path = os.path.join(
@@ -432,8 +435,10 @@ def get_model_sql(model_name, project):
             path
         )
 
-    print("Looking for:", sql_path)
-    print("Exists:", os.path.exists(sql_path))
+    print("Original path :", details.get("original_file_path"))
+    print("Normalized path:", path)
+    print("Looking for    :", sql_path)
+    print("Exists         :", os.path.exists(sql_path))
 
     if not os.path.exists(sql_path):
         return None
