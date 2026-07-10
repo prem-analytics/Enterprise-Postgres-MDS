@@ -6,7 +6,9 @@ Global Configuration
 """
 
 import os
+import streamlit as st
 from dotenv import load_dotenv
+
 
 # Load .env file
 load_dotenv()
@@ -31,15 +33,30 @@ FACT_TABLE = "fct_orders"
 # POSTGRESQL
 # ==========================================================
 
-POSTGRES_DB = os.getenv("DB_NAME", "")
+try:
+    POSTGRES_DB = st.secrets["DB_NAME"]
+except Exception:
+    POSTGRES_DB = os.getenv("DB_NAME", "")
 
-POSTGRES_HOST = os.getenv("DB_HOST", "")
+try:
+    POSTGRES_HOST = st.secrets["DB_HOST"]
+except Exception:
+    POSTGRES_HOST = os.getenv("DB_HOST", "")
 
-POSTGRES_USER = os.getenv("DB_USER", "")
+try:
+    POSTGRES_USER = st.secrets["DB_USER"]
+except Exception:
+    POSTGRES_USER = os.getenv("DB_USER", "")
 
-POSTGRES_PASSWORD = os.getenv("DB_PASSWORD", "")
+try:
+    POSTGRES_PASSWORD = st.secrets["DB_PASSWORD"]
+except Exception:
+    POSTGRES_PASSWORD = os.getenv("DB_PASSWORD", "")
 
-POSTGRES_PORT = int(os.getenv("DB_PORT", 5432))
+try:
+    POSTGRES_PORT = int(st.secrets["DB_PORT"])
+except Exception:
+    POSTGRES_PORT = int(os.getenv("DB_PORT", 5432))
 
 # ==========================================================
 # STREAMLIT
