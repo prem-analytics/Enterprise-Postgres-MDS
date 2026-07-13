@@ -761,9 +761,21 @@ st.info("""
 🟢 Fact / Mart Models
 """)
 
-# agraph(
-#     nodes=nodes,
-#     edges=edges,
-#     config=config,
-# )
-st.success("Graph temporarily disabled for testing.")
+try:
+    st.subheader("Nodes Data")
+    st.write(nodes_data)
+
+    st.subheader("Edges Data")
+    st.write(edges_data)
+
+    # Leave the graph disabled for now
+    # agraph(
+    #     nodes=nodes,
+    #     edges=edges,
+    #     config=config,
+    # )
+
+    st.success("Graph temporarily disabled for testing.")
+
+except Exception as e:
+    st.exception(e)
