@@ -762,20 +762,11 @@ st.info("""
 """)
 
 try:
-    st.subheader("Node Objects")
-    st.write(nodes)
-
-    st.subheader("Edge Objects")
-    st.write(edges)
-
-    # Keep the graph disabled
-    # agraph(
-    #     nodes=nodes,
-    #     edges=edges,
-    #     config=config,
-    # )
-
-    st.success("Node and Edge objects created successfully.")
+    agraph(
+        nodes=nodes,
+        edges=edges,
+        config=config,
+    )
 
 except Exception as e:
     st.exception(e)
