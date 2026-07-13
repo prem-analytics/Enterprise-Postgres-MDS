@@ -761,8 +761,9 @@ st.info("""
 🟢 Fact / Mart Models
 """)
 
-agraph(
-    nodes=nodes,
-    edges=edges,
-    config=config,
-)
+# agraph(
+#     nodes=nodes,
+#     edges=edges,
+#     config=config,
+# )
+st.success("Graph temporarily disabled for testing.")
