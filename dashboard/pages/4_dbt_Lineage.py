@@ -762,20 +762,20 @@ st.info("""
 """)
 
 try:
-    st.subheader("Nodes Data")
-    st.write(nodes_data)
+    st.subheader("Node Objects")
+    st.write(nodes)
 
-    st.subheader("Edges Data")
-    st.write(edges_data)
+    st.subheader("Edge Objects")
+    st.write(edges)
 
-    # Leave the graph disabled for now
+    # Keep the graph disabled
     # agraph(
     #     nodes=nodes,
     #     edges=edges,
     #     config=config,
     # )
 
-    st.success("Graph temporarily disabled for testing.")
+    st.success("Node and Edge objects created successfully.")
 
 except Exception as e:
     st.exception(e)
