@@ -7,3 +7,14 @@ sources:
     tables:
       - name: raw_customers
       - name: raw_orders
+
+models:
+
+  - name: stg_orders
+    description: "Staging model for raw orders."
+
+  - name: stg_customers
+    description: "Staging model for raw customers."
+
+  - name: fct_orders
+    description: "Fact table containing enriched customer orders."
